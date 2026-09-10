@@ -43,19 +43,20 @@ defmodule LojaApiWeb.Endpoint do
   plug Plug.RequestId
 
   plug CORSPlug,
-  origin: "*",
-  methods: [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS"
-  ],
-  headers: [
-    "Authorization",
-    "Content-Type"
-  ]
+    origin: "*",
+    credentials: false,
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS"
+    ],
+    headers: [
+      "Authorization",
+      "Content-Type"
+    ]
 
   plug Plug.Telemetry,
     event_prefix: [
