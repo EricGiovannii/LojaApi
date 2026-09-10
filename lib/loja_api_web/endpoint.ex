@@ -44,8 +44,20 @@ defmodule LojaApiWeb.Endpoint do
 
   plug CORSPlug,
     origin: ["http://localhost:5173",
-            "http://localhost:4173"
-    ]
+             "http://localhost:4173"
+    ],
+    methods: [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS"
+  ],
+  headers: [
+    "Authorization",
+    "Content-Type"
+  ]
 
   plug Plug.Telemetry,
     event_prefix: [
