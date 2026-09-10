@@ -42,9 +42,7 @@ defmodule LojaApiWeb.Endpoint do
 
   plug Plug.RequestId
 
-  # ============================================
   # TESTE TEMPORÁRIO DE CORS
-  # ============================================
 
   plug :put_cors_test_header
 
@@ -84,15 +82,22 @@ defmodule LojaApiWeb.Endpoint do
   plug Plug.Session, @session_options
   plug LojaApiWeb.Router
 
-  # ============================================
   # TESTE TEMPORÁRIO DE CORS
-  # ============================================
 
   defp put_cors_test_header(conn, _opts) do
-    Plug.Conn.put_resp_header(
+    Plug.Conn.register_before_send(
       conn,
-      "access-control-allow-origin",
-      "*"
+      fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header(
+          "access-control-allow-origin",
+          "*"
+        )
+        |> Plug.Conn.put_resp_header(
+          "x-cors-test",
+          "phoenix-before-send"
+        )
+      end
     )
   end
 end
