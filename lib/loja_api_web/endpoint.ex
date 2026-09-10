@@ -43,10 +43,8 @@ defmodule LojaApiWeb.Endpoint do
   plug Plug.RequestId
 
   plug CORSPlug,
-    origin: ["http://localhost:5173",
-             "http://localhost:4173"
-    ],
-    methods: [
+  origin: "*",
+  methods: [
     "GET",
     "POST",
     "PUT",
