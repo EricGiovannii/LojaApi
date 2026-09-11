@@ -88,6 +88,12 @@ defmodule LojaApiWeb.Endpoint do
     Plug.Conn.register_before_send(
       conn,
       fn conn ->
+        require Logger
+
+        Logger.info(
+          "=== CORS TEST: register_before_send EXECUTADO ==="
+        )
+
         conn
         |> Plug.Conn.put_resp_header(
           "access-control-allow-origin",
