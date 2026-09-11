@@ -8,11 +8,11 @@ import Config
 config :loja_api, LojaApi.Repo,
   username: "postgres",
   password:
-    System.get_env("POSTGRES_PASSWORD") ||
-      raise """
-      environment variable POSTGRES_PASSWORD is missing.
-      Configure it before running the tests.
-      """,
+    (System.get_env("POSTGRES_PASSWORD") ||
+       raise """
+       environment variable POSTGRES_PASSWORD is missing.
+       Configure it before running the tests.
+       """),
   hostname: "localhost",
   database: "loja_api_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
@@ -23,11 +23,11 @@ config :loja_api, LojaApi.Repo,
 config :loja_api, LojaApiWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
   secret_key_base:
-    System.get_env("SECRET_KEY_BASE") ||
-      raise """
-      environment variable SECRET_KEY_BASE is missing.
-      Configure it before running the tests.
-      """,
+    (System.get_env("SECRET_KEY_BASE") ||
+       raise """
+       environment variable SECRET_KEY_BASE is missing.
+       Configure it before running the tests.
+       """),
   server: false
 
 # In test we don't send emails

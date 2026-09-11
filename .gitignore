@@ -35,3 +35,5 @@ loja_api-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Backups do banco de dados
+*.dump
