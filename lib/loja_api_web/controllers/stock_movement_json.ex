@@ -23,11 +23,11 @@ defmodule LojaApiWeb.StockMovementJSON do
 
   defp data(%StockMovement{} = stock_movement) do
     %{
-      id: stock_movement.id,
-      tipo: stock_movement.tipo,
-      quantidade: stock_movement.quantidade,
-      observacao: stock_movement.observacao,
-      product_id: stock_movement.product_id,
+      id:          stock_movement.id,
+      tipo:        stock_movement.tipo,
+      quantidade:  stock_movement.quantidade,
+      observacao:  stock_movement.observacao,
+      product_id:  stock_movement.product_id,
       inserido_em: stock_movement.inserted_at,
       product: product_data(stock_movement.product)
     }
@@ -39,9 +39,9 @@ defmodule LojaApiWeb.StockMovementJSON do
 
   defp product_data(product) do
     %{
-      id: product.id,
+      id:   product.id,
       nome: product.nome,
-      sku: product.sku
+      sku:  product.sku
     }
   end
 end

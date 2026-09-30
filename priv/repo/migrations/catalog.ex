@@ -4,9 +4,7 @@ defmodule LojaApi.Catalog do
 
   alias LojaApi.Catalog.Product
 
-  # ============================================
-  # ================= PRODUTOS =================
-  # ============================================
+  # ===== PRODUTOS ======
 
   def list_products do
     Product
@@ -40,9 +38,7 @@ defmodule LojaApi.Catalog do
     Product.changeset(product, attrs)
   end
 
-  # ============================================
-  # ================ CATEGORIAS ================
-  # ============================================
+  # ===== CATEGORIAS =====
 
   alias LojaApi.Catalog.Category
 
@@ -92,9 +88,7 @@ def change_category(%Category{} = category, attrs \\ %{}) do
   Category.changeset(category, attrs)
 end
 
-  # ============================================
-  # ======== MOVIMENTAÇÕES DE ESTOQUE ==========
-  # ============================================
+  # ==== MOVIMENTAÇÕES DE ESTOQUE =====
 
   alias LojaApi.Catalog.StockMovement
 
@@ -301,9 +295,7 @@ end
     StockMovement.changeset(stock_movement, attrs)
   end
 
-  # ============================================
-  # ================ DASHBOARD =================
-  # ============================================
+  # ===== DASHBOARD ======
 
   def dashboard do
     total_produtos =
@@ -475,35 +467,35 @@ end
       |> Repo.preload(:product)
 
     %{
-      total_produtos: total_produtos,
-      total_categorias: total_categorias,
-      produtos_ativos: produtos_ativos,
-      produtos_inativos: produtos_inativos,
-      produtos_com_estoque: produtos_com_estoque,
-      percentual_produtos_ativos: percentual_produtos_ativos,
-      estoque_total: estoque_total,
-      total_movimentacoes: total_movimentacoes,
-      movimentacoes_entrada: movimentacoes_entrada,
-      movimentacoes_saida: movimentacoes_saida,
-      total_entradas: total_entradas,
-      total_saidas: total_saidas,
-      saldo_movimentacoes: saldo_movimentacoes,
-      movimentacoes_7_dias: movimentacoes_7_dias,
-      movimentacoes_30_dias: movimentacoes_30_dias,
-      entradas_30_dias: entradas_30_dias,
-      saidas_30_dias: saidas_30_dias,
-      taxa_entrada: taxa_entrada,
-      taxa_saida: taxa_saida,
-      media_entradas_dia: media_entradas_dia,
-      media_saidas_dia: media_saidas_dia,
-      cobertura_estoque_dias: cobertura_estoque_dias,
-      valor_total_estoque: valor_total_estoque,
-      produtos_estoque_baixo: produtos_estoque_baixo,
+      total_produtos:               total_produtos,
+      total_categorias:             total_categorias,
+      produtos_ativos:              produtos_ativos,
+      produtos_inativos:            produtos_inativos,
+      produtos_com_estoque:         produtos_com_estoque,
+      percentual_produtos_ativos:   percentual_produtos_ativos,
+      estoque_total:                estoque_total,
+      total_movimentacoes:          total_movimentacoes,
+      movimentacoes_entrada:        movimentacoes_entrada,
+      movimentacoes_saida:          movimentacoes_saida,
+      total_entradas:               total_entradas,
+      total_saidas:                 total_saidas,
+      saldo_movimentacoes:          saldo_movimentacoes,
+      movimentacoes_7_dias:         movimentacoes_7_dias,
+      movimentacoes_30_dias:        movimentacoes_30_dias,
+      entradas_30_dias:             entradas_30_dias,
+      saidas_30_dias:               saidas_30_dias,
+      taxa_entrada:                 taxa_entrada,
+      taxa_saida:                   taxa_saida,
+      media_entradas_dia:           media_entradas_dia,
+      media_saidas_dia:             media_saidas_dia,
+      cobertura_estoque_dias:       cobertura_estoque_dias,
+      valor_total_estoque:          valor_total_estoque,
+      produtos_estoque_baixo:       produtos_estoque_baixo,
       total_produtos_estoque_baixo: total_produtos_estoque_baixo,
-      produtos_sem_estoque: produtos_sem_estoque,
-      produtos_parados: produtos_parados,
-      total_produtos_parados: total_produtos_parados,
-      ultimas_movimentacoes: ultimas_movimentacoes
+      produtos_sem_estoque:         produtos_sem_estoque,
+      produtos_parados:             produtos_parados,
+      total_produtos_parados:       total_produtos_parados,
+      ultimas_movimentacoes:        ultimas_movimentacoes
     }
   end
 end

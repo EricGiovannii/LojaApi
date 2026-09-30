@@ -78,9 +78,8 @@ defmodule LojaApi.CatalogTest do
     Category.changeset(category, attrs)
   end
 
-  # ============================================
-  # ======== MOVIMENTAÇÕES DE ESTOQUE ==========
-  # ============================================
+
+  # ===== MOVIMENTAÇÕES DE ESTOQUE ======
 
   alias LojaApi.Catalog.StockMovement
 
@@ -316,9 +315,7 @@ defmodule LojaApi.CatalogTest do
     StockMovement.changeset(stock_movement, attrs)
   end
 
-  # ============================================
-  # ================ DASHBOARD =================
-  # ============================================
+  # ====== DASHBOARD =======
 
   def dashboard do
     total_produtos =

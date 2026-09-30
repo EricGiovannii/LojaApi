@@ -1,10 +1,5 @@
 defmodule LojaApiWeb.FallbackController do
-  @moduledoc """
-  Translates controller action results into valid `Plug.Conn` responses.
-
-  See `Phoenix.Controller.action_fallback/1` for more details.
-  """
-
+  
   use LojaApiWeb, :controller
 
   # Erros de validação do Ecto
@@ -40,7 +35,48 @@ defmodule LojaApiWeb.FallbackController do
     conn
     |> put_status(:unprocessable_entity)
     |> json(%{
-      error: "Tipo de movimentação inválido. Use 'entrada' ou 'saida'."
+      error:
+        "Tipo de movimentação inválido. Use 'entrada' ou 'saida'."
+    })
+  end
+
+  # Venda sem itens
+  def call(conn, {:error, :sale_without_items}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{
+      error:
+        "A venda deve possuir pelo menos um item."
+    })
+  end
+
+  # Quantidade inválida na venda
+  def call(conn, {:error, :quantidade_invalida}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{
+      error:
+        "A quantidade deve ser maior que zero."
+    })
+  end
+
+  # Produto inativo
+  def call(conn, {:error, :product_inactive}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{
+      error:
+        "O produto está inativo."
+    })
+  end
+
+  # Venda já cancelada
+  def call(conn, {:error, :sale_already_cancelled}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{
+      error:
+        "A venda já está cancelada."
     })
   end
 end

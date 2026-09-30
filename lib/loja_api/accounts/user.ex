@@ -3,6 +3,7 @@ defmodule LojaApi.Accounts.User do
 
   import Ecto.Changeset
 
+  alias LojaApi.Catalog.Sale
   alias LojaApi.Catalog.StockMovement
 
   schema "users" do
@@ -12,6 +13,7 @@ defmodule LojaApi.Accounts.User do
     field :ativo, :boolean, default: true
 
     has_many :stock_movements, StockMovement
+    has_many :sales, Sale
 
     timestamps(type: :utc_datetime)
   end

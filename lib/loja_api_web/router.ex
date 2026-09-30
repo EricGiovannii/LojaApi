@@ -9,7 +9,7 @@ defmodule LojaApiWeb.Router do
     plug LojaApiWeb.AuthPlug
   end
 
-  # ========= ROTAS PÚBLICAS =========== #
+  # ==== ROTAS PÚBLICAS ==== #
 
   scope "/api", LojaApiWeb do
     pipe_through :api
@@ -23,7 +23,7 @@ defmodule LojaApiWeb.Router do
       :login
   end
 
-  # =========== ROTAS PROTEGIDAS ============ #
+  # ==== ROTAS PROTEGIDAS ==== #
 
   scope "/api", LojaApiWeb do
     pipe_through [
@@ -39,9 +39,21 @@ defmodule LojaApiWeb.Router do
       CategoryController,
       except: [:new, :edit]
 
+    resources "/brands",
+      BrandController,
+      except: [:new, :edit]
+
     resources "/stock_movements",
       StockMovementController,
       except: [:new, :edit]
+
+    resources "/sales",
+      SaleController,
+      except: [:new, :edit, :update]
+
+    resources "/financial_entries",
+      FinancialEntryController,
+      except: [:new, :edit, :update]
 
     get "/dashboard",
       DashboardController,
@@ -52,7 +64,7 @@ defmodule LojaApiWeb.Router do
       :me
   end
 
-  # ========= ROTAS DE DESENVOLVIMENTO ========= #
+  # ==== ROTAS DE DESENVOLVIMENTO ===== #
 
   if Application.compile_env(
        :loja_api,

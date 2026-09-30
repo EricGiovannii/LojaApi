@@ -43,9 +43,11 @@ defmodule LojaApiWeb.ProductJSON do
       descricao: product.descricao,
       preco: Decimal.to_string(product.preco),
       estoque: product.estoque,
+      estoque_minimo: product.estoque_minimo,
       sku: product.sku,
       ativo: product.ativo,
-      category: category_data(product.category)
+      category: category_data(product.category),
+      brand: brand_data(product.brand)
     }
   end
 
@@ -58,6 +60,18 @@ defmodule LojaApiWeb.ProductJSON do
       id: category.id,
       nome: category.nome,
       descricao: category.descricao
+    }
+  end
+
+  defp brand_data(nil), do: nil
+
+  defp brand_data(%Ecto.Association.NotLoaded{}), do: nil
+
+  defp brand_data(brand) do
+    %{
+      id: brand.id,
+      nome: brand.nome,
+      descricao: brand.descricao
     }
   end
 end

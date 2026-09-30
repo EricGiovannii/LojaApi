@@ -2,7 +2,9 @@ defmodule LojaApi.Catalog.Product do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias LojaApi.Catalog.Brand
   alias LojaApi.Catalog.Category
+  alias LojaApi.Catalog.SaleItem
   alias LojaApi.Catalog.StockMovement
 
   schema "products" do
@@ -10,11 +12,14 @@ defmodule LojaApi.Catalog.Product do
     field :descricao, :string
     field :preco, :decimal
     field :estoque, :integer
+    field :estoque_minimo, :integer, default: 0
     field :sku, :string
     field :ativo, :boolean, default: true
 
     belongs_to :category, Category
+    belongs_to :brand, Brand
     has_many :stock_movements, StockMovement
+    has_many :sale_items, SaleItem
 
     timestamps(type: :utc_datetime)
   end
@@ -27,9 +32,11 @@ defmodule LojaApi.Catalog.Product do
       :descricao,
       :preco,
       :estoque,
+      :estoque_minimo,
       :sku,
       :ativo,
-      :category_id
+      :category_id,
+      :brand_id
     ])
     |> validate_required([
       :nome,
@@ -37,10 +44,12 @@ defmodule LojaApi.Catalog.Product do
       :preco,
       :estoque,
       :sku,
-      :category_id
+      :category_id,
+      :brand_id
     ])
     |> validate_number(:preco, greater_than: 0)
     |> validate_number(:estoque, greater_than_or_equal_to: 0)
+    |> validate_number(:estoque_minimo, greater_than_or_equal_to: 0)
     |> validate_length(:sku, min: 3, max: 50)
     |> unique_constraint(:sku, name: :products_sku_index)
   end

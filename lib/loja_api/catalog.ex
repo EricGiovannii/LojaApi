@@ -3,15 +3,14 @@ defmodule LojaApi.Catalog do
   alias LojaApi.Repo
 
   alias LojaApi.Catalog.Product
+  alias LojaApi.Catalog.Brand
 
-  # ============================================
-  # ================= PRODUTOS =================
-  # ============================================
+  # --- PRODUTOS ----
 
   def list_products do
     Product
     |> Repo.all()
-    |> Repo.preload(:category)
+    |> Repo.preload([:category, :brand])
   end
 
   def get_product!(id) do
@@ -20,7 +19,7 @@ defmodule LojaApi.Catalog do
         {:error, :not_found}
 
       product ->
-        Repo.preload(product, :category)
+        Repo.preload(product, [:category, :brand])
     end
   end
 
@@ -44,9 +43,77 @@ defmodule LojaApi.Catalog do
     Product.changeset(product, attrs)
   end
 
-  # ============================================
-  # ================ CATEGORIAS ================
-  # ============================================
+  # ---- MARCAS ----
+
+  def list_brands do
+    Brand
+    |> Repo.all()
+    |> Repo.preload(:products)
+  end
+
+  def get_brand!(id) do
+    case Repo.get(Brand, id) do
+      nil ->
+        {:error, :not_found}
+
+      brand ->
+        Repo.preload(brand, :products)
+    end
+  end
+
+  def create_brand(attrs) do
+    %Brand{}
+    |> Brand.changeset(attrs)
+    |> Repo.insert()
+    |> case do
+      {:ok, brand} ->
+        {:ok, Repo.preload(brand, :products)}
+
+      error ->
+        error
+    end
+  end
+
+  def update_brand(
+        %Brand{} = brand,
+        attrs
+      ) do
+    brand
+    |> Brand.changeset(attrs)
+    |> Repo.update()
+    |> case do
+      {:ok, updated_brand} ->
+        {:ok, Repo.preload(updated_brand, :products)}
+
+      error ->
+        error
+    end
+  end
+
+  def delete_brand(%Brand{} = brand) do
+    has_products =
+      Product
+      |> where(
+        [p],
+        p.brand_id == ^brand.id
+      )
+      |> Repo.exists?()
+
+    if has_products do
+      {:error, :brand_has_products}
+    else
+      Repo.delete(brand)
+    end
+  end
+
+  def change_brand(
+        %Brand{} = brand,
+        attrs \\ %{}
+      ) do
+    Brand.changeset(brand, attrs)
+  end
+
+  # ---- CATEGORIAS ----
 
   alias LojaApi.Catalog.Category
 
@@ -118,9 +185,7 @@ defmodule LojaApi.Catalog do
     Category.changeset(category, attrs)
   end
 
-  # ============================================
-  # ======== MOVIMENTAÇÕES DE ESTOQUE ==========
-  # ============================================
+  # ---- MOVIMENTAÇÕES DE ESTOQUE ----
 
   alias LojaApi.Catalog.StockMovement
 
@@ -428,9 +493,303 @@ defmodule LojaApi.Catalog do
     )
   end
 
-  # ============================================
-  # ================ DASHBOARD =================
-  # ============================================
+  # ---- VENDAS ----
+
+  alias LojaApi.Catalog.Sale
+  alias LojaApi.Catalog.SaleItem
+  alias LojaApi.Finance.FinancialEntry
+
+  def list_sales do
+    Sale
+    |> order_by([s], desc: s.inserted_at)
+    |> Repo.all()
+    |> Repo.preload([:user, sale_items: :product])
+  end
+
+  def get_sale!(id) do
+    case Repo.get(Sale, id) do
+      nil ->
+        {:error, :not_found}
+
+      sale ->
+        Repo.preload(
+          sale,
+          [:user, sale_items: :product]
+        )
+    end
+  end
+
+  def create_sale(attrs, user_id) do
+    items =
+      Map.get(attrs, "items") ||
+        Map.get(attrs, :items) ||
+        []
+
+    observacao =
+      Map.get(attrs, "observacao") ||
+        Map.get(attrs, :observacao)
+
+    if items == [] do
+      {:error, :sale_without_items}
+    else
+      Repo.transaction(fn ->
+        total =
+          Enum.reduce(items, Decimal.new("0"), fn item, total ->
+            product_id =
+              get_attr(item, "product_id")
+
+            quantidade =
+              get_attr(item, "quantidade")
+
+            quantidade =
+              case normalize_quantity(quantidade) do
+                {:ok, value} ->
+                  value
+
+                :error ->
+                  Repo.rollback(:quantidade_invalida)
+              end
+
+            product =
+              get_product_for_update(product_id)
+
+            if not product.ativo do
+              Repo.rollback(:product_inactive)
+            end
+
+            if product.estoque < quantidade do
+              Repo.rollback(:estoque_insuficiente)
+            end
+
+            subtotal =
+              Decimal.mult(
+                product.preco,
+                Decimal.new(
+                  Integer.to_string(quantidade)
+                )
+              )
+
+            subtotal =
+              Decimal.add(
+                total,
+                subtotal
+              )
+
+            subtotal
+          end)
+
+        sale_attrs = %{
+          total: total,
+          observacao: observacao,
+          status: "finalizada",
+          user_id: user_id
+        }
+
+        {:ok, sale} =
+          %Sale{}
+          |> Sale.changeset(sale_attrs)
+          |> Repo.insert()
+
+        Enum.each(items, fn item ->
+          product_id =
+            get_attr(item, "product_id")
+
+          quantidade =
+            get_attr(item, "quantidade")
+
+          quantidade =
+            case normalize_quantity(quantidade) do
+              {:ok, value} ->
+                value
+
+              :error ->
+                Repo.rollback(:quantidade_invalida)
+            end
+
+          product =
+            get_product_for_update(product_id)
+
+          if not product.ativo do
+            Repo.rollback(:product_inactive)
+          end
+
+          if product.estoque < quantidade do
+            Repo.rollback(:estoque_insuficiente)
+          end
+
+          preco_unitario =
+            product.preco
+
+          subtotal =
+            Decimal.mult(
+              preco_unitario,
+              Decimal.new(
+                Integer.to_string(quantidade)
+              )
+            )
+
+          sale_item_attrs = %{
+            quantidade: quantidade,
+            preco_unitario: preco_unitario,
+            subtotal: subtotal,
+            sale_id: sale.id,
+            product_id: product.id
+          }
+
+          %SaleItem{}
+          |> SaleItem.changeset(sale_item_attrs)
+          |> Repo.insert!()
+
+          novo_estoque =
+            product.estoque - quantidade
+
+          product
+          |> Product.estoque_changeset(%{
+            estoque: novo_estoque
+          })
+          |> Repo.update!()
+
+          movement_attrs = %{
+            tipo: "saida",
+            quantidade: quantidade,
+            observacao: "Venda ##{sale.id}",
+            product_id: product.id
+          }
+
+          %StockMovement{}
+          |> StockMovement.changeset(movement_attrs)
+          |> Ecto.Changeset.put_change(
+            :user_id,
+            user_id
+          )
+          |> Repo.insert!()
+        end)
+
+        financial_entry_attrs = %{
+          tipo: "entrada",
+          descricao: "Venda ##{sale.id}",
+          valor: sale.total,
+          status: "efetivado",
+          sale_id: sale.id,
+          user_id: user_id
+        }
+
+        %FinancialEntry{}
+        |> FinancialEntry.changeset(
+          financial_entry_attrs
+        )
+        |> Repo.insert!()
+
+        Repo.preload(
+          sale,
+          [:user, sale_items: :product]
+        )
+      end)
+    end
+  end
+
+  def cancel_sale(%Sale{} = sale, user_id) do
+    if sale.status == "cancelada" do
+      {:error, :sale_already_cancelled}
+    else
+      sale =
+        Repo.preload(
+          sale,
+          [:user, sale_items: :product]
+        )
+
+      Repo.transaction(fn ->
+        Enum.each(
+          sale.sale_items,
+          fn sale_item ->
+            product =
+              get_product_for_update(
+                sale_item.product_id
+              )
+
+            novo_estoque =
+              product.estoque +
+                sale_item.quantidade
+
+            product
+            |> Product.estoque_changeset(%{
+              estoque: novo_estoque
+            })
+            |> Repo.update!()
+
+            movement_attrs = %{
+              tipo: "entrada",
+              quantidade: sale_item.quantidade,
+              observacao:
+                "Cancelamento venda ##{sale.id}",
+              product_id: product.id
+            }
+
+            %StockMovement{}
+            |> StockMovement.changeset(
+              movement_attrs
+            )
+            |> Ecto.Changeset.put_change(
+              :user_id,
+              user_id
+            )
+            |> Repo.insert!()
+          end
+        )
+
+        financial_entry =
+          Repo.get_by(
+            FinancialEntry,
+            sale_id: sale.id
+          )
+
+        if financial_entry do
+          financial_entry
+          |> FinancialEntry.changeset(%{
+            status: "cancelado"
+          })
+          |> Repo.update!()
+        end
+
+        sale
+        |> Sale.changeset(%{
+          status: "cancelada"
+        })
+        |> Repo.update!()
+        |> Repo.preload(
+          [:user, sale_items: :product]
+        )
+      end)
+    end
+  end
+
+  defp get_attr(map, key) do
+    Map.get(map, key) ||
+      Map.get(
+        map,
+        String.to_atom(key)
+      )
+  end
+
+  defp normalize_quantity(value)
+       when is_integer(value) and value > 0 do
+    {:ok, value}
+  end
+
+  defp normalize_quantity(value)
+       when is_binary(value) do
+    case Integer.parse(value) do
+      {integer, ""} when integer > 0 ->
+        {:ok, integer}
+
+      _ ->
+        :error
+    end
+  end
+
+  defp normalize_quantity(_value), do: :error
+
+  # ---- DASHBOARD ----
 
   def dashboard do
     total_produtos =
@@ -619,11 +978,12 @@ defmodule LojaApi.Catalog do
         [p],
         p.ativo == true and
           p.estoque > 0 and
-          p.estoque <= 5
+          p.estoque_minimo > 0 and
+          p.estoque <= p.estoque_minimo
       )
       |> order_by([p], asc: p.estoque)
       |> Repo.all()
-      |> Repo.preload(:category)
+      |> Repo.preload([:category, :brand])
 
     total_produtos_estoque_baixo =
       length(produtos_estoque_baixo)
@@ -637,7 +997,7 @@ defmodule LojaApi.Catalog do
       )
       |> order_by([p], asc: p.nome)
       |> Repo.all()
-      |> Repo.preload(:category)
+      |> Repo.preload([:category, :brand])
 
     produtos_movimentados_30_dias =
       StockMovement
@@ -660,7 +1020,7 @@ defmodule LojaApi.Catalog do
       )
       |> order_by([p], asc: p.nome)
       |> Repo.all()
-      |> Repo.preload(:category)
+      |> Repo.preload([:category, :brand])
 
     total_produtos_parados =
       length(produtos_parados)
@@ -672,9 +1032,7 @@ defmodule LojaApi.Catalog do
       |> Repo.all()
       |> Repo.preload(:product)
 
-    # ==========================================
-    #       MOVIMENTAÇÕES POR DIA
-    # ==========================================
+    # ---- MOVIMENTAÇÕES POR DIA -----
 
     movimentacoes_por_dia =
       StockMovement
