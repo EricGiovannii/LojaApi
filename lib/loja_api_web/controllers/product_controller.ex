@@ -8,6 +8,7 @@ defmodule LojaApiWeb.ProductController do
 
   def index(conn, _params) do
     products = Catalog.list_products()
+
     render(conn, :index, products: products)
   end
 
@@ -41,3 +42,4 @@ defmodule LojaApiWeb.ProductController do
     end
   end
 end
+

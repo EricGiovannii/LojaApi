@@ -20,9 +20,19 @@ defmodule LojaApi.CatalogFixtures do
           %{id: category_id}
       end
 
+    brand =
+      case Map.get(attrs, :brand_id) do
+        nil ->
+          brand_fixture()
+
+        brand_id ->
+          %{id: brand_id}
+      end
+
     attrs =
       attrs
       |> Map.put_new(:category_id, category.id)
+      |> Map.put_new(:brand_id, brand.id)
       |> Map.put_new(
         :sku,
         "SKU-#{System.unique_integer([:positive])}"
@@ -63,6 +73,29 @@ defmodule LojaApi.CatalogFixtures do
       |> LojaApi.Catalog.create_category()
 
     category
+  end
+
+  @doc """
+  Generate a brand.
+  """
+  def brand_fixture(attrs \\ %{}) do
+    attrs =
+      attrs
+      |> Map.put_new(
+        :nome,
+        "Marca #{System.unique_integer([:positive])}"
+      )
+      |> Map.put_new(
+        :descricao,
+        "some descricao"
+      )
+
+    {:ok, brand} =
+      attrs
+      |> Enum.into(%{})
+      |> LojaApi.Catalog.create_brand()
+
+    brand
   end
 
   @doc """

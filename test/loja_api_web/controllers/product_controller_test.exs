@@ -58,6 +58,7 @@ defmodule LojaApiWeb.ProductControllerTest do
   describe "create product" do
     test "renders product when data is valid", %{conn: conn} do
       category = category_fixture()
+      brand = brand_fixture()
 
       create_attrs = %{
         nome: "some nome",
@@ -66,7 +67,8 @@ defmodule LojaApiWeb.ProductControllerTest do
         estoque: 42,
         sku: "SKU-TEST-001",
         ativo: true,
-        category_id: category.id
+        category_id: category.id,
+        brand_id: brand.id
       }
 
       conn =
